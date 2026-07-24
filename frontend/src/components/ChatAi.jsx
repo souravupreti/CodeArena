@@ -1,88 +1,76 @@
-import { useState, useRef, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import axiosClient from "../utils/axiosClient";
-import { Send } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import axiosClient from '../utils/axiosClient';
+import { Send, Bot, User } from 'lucide-react';
 
-function ChatAi({problem}) {
-    const [messages, setMessages] = useState([
-        { role: 'model', parts:[{text: "Hi, How are you"}]},
-        { role: 'user', parts:[{text: "I am Good"}]}
-    ]);
+function ChatAi({ problem }) {
+  const [messages, setMessages] = useState([
+    { role: 'model', parts: [{ text: `Hi! I'm your Gemini AI Coach. Ask me anything about "${problem?.title || 'this problem'}".` }] },
+  ]);
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const messagesEndRef = useRef(null);
 
-    const { register, handleSubmit, reset,formState: {errors} } = useForm();
-    const messagesEndRef = useRef(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+  const onSubmit = async (data) => {
+    const newUserMessage = { role: 'user', parts: [{ text: data.message }] };
+    const updatedMessages = [...messages, newUserMessage];
+    setMessages(updatedMessages);
+    reset();
 
-    const onSubmit = async (data) => {
-        
-        const newUserMessage = { role: 'user', parts:[{text: data.message}] };
-        const updatedMessages = [...messages, newUserMessage];
-        setMessages(updatedMessages);
-        reset();
+    try {
+      const response = await axiosClient.post('/ai/chat', {
+        messages: updatedMessages,
+        title: problem.title,
+        description: problem.description,
+        testCases: problem.visibleTestCases,
+        startCode: problem.startCode,
+      });
 
-        try {
-            
-            const response = await axiosClient.post("/ai/chat", {
-                messages: updatedMessages,
-                title:problem.title,
-                description:problem.description,
-                testCases: problem.visibleTestCases,
-                startCode:problem.startCode
-            });
+      setMessages((prev) => [...prev, { role: 'model', parts: [{ text: response.data.message }] }]);
+    } catch (error) {
+      console.error('API Error:', error);
+      setMessages((prev) => [...prev, { role: 'model', parts: [{ text: 'Could not reach AI assistant. Please try again.' }] }]);
+    }
+  };
 
-           
-            setMessages(prev => [...prev, { 
-                role: 'model', 
-                parts:[{text: response.data.message}] 
-            }]);
-        } catch (error) {
-            console.error("API Error:", error);
-            setMessages(prev => [...prev, { 
-                role: 'model', 
-                parts:[{text: "Error from AI Chatbot"}]
-            }]);
-        }
-    };
+  return (
+    <div className="flex h-[75vh] flex-col overflow-hidden rounded-lg border border-[#303030] bg-[#1a1a1a]">
+      <div className="flex items-center gap-2 border-b border-[#303030] bg-[#242424] p-3 text-xs font-bold text-white">
+        <Bot size={16} className="text-[#ffa116]" />
+        <span>AI Tutor - Logic & Intuition</span>
+      </div>
 
-    return (
-        <div className="flex flex-col h-screen max-h-[80vh] min-h-[500px]">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((msg, index) => (
-                    <div 
-                        key={index} 
-                        className={`chat ${msg.role === "user" ? "chat-end" : "chat-start"}`}
-                    >
-                        <div className="chat-bubble bg-base-200 text-base-content">
-                            {msg.parts[0].text}
-                        </div>
-                    </div>
-                ))}
-                <div ref={messagesEndRef} />
+      <div className="flex-1 space-y-3 overflow-y-auto p-4 text-sm">
+        {messages.map((msg, index) => (
+          <div key={index} className={`flex gap-2.5 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+            <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${msg.role === 'user' ? 'bg-[#0a84ff] text-white' : 'bg-[#3d2a12] text-[#ffa116]'}`}>
+              {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
             </div>
-            <form 
-                onSubmit={handleSubmit(onSubmit)} 
-                className="sticky bottom-0 p-4 bg-base-100 border-t"
-            >
-                <div className="flex items-center">
-                    <input 
-                        placeholder="Ask me anything" 
-                        className="input input-bordered flex-1" 
-                        {...register("message", { required: true, minLength: 2 })}
-                    />
-                    <button 
-                        type="submit" 
-                        className="btn btn-ghost ml-2"
-                        disabled={errors.message}
-                    >
-                        <Send size={20} />
-                    </button>
-                </div>
-            </form>
+            <div className={`max-w-[82%] rounded-lg p-3 leading-relaxed ${msg.role === 'user' ? 'rounded-tr-none bg-[#0a84ff] text-white' : 'rounded-tl-none border border-[#303030] bg-[#242424] text-[#e5e5e5]'}`}>
+              {msg.parts[0].text}
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="border-t border-[#303030] bg-[#242424] p-3">
+        <div className="flex items-center gap-2">
+          <input
+            placeholder="Ask for guidance or a hint..."
+            className="lc-field flex-1"
+            {...register('message', { required: true, minLength: 2 })}
+          />
+          <button type="submit" className="lc-btn lc-btn-primary p-2.5" disabled={errors.message}>
+            <Send size={16} />
+          </button>
         </div>
-    );
+      </form>
+    </div>
+  );
 }
 
 export default ChatAi;

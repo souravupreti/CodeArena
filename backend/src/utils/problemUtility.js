@@ -58,7 +58,7 @@ const options = {
   url: 'https://judge0-ce.p.rapidapi.com/submissions/batch',
   params: {
     tokens: resultToken.join(","),
-    base64_encoded: 'false',
+    base64_encoded: 'true',
     fields: '*'
   },
   headers: {
@@ -67,19 +67,36 @@ const options = {
   }
 };
 
+const decodeBase64 = (str) => {
+  if (!str) return str;
+  return Buffer.from(str, 'base64').toString('utf-8');
+};
+
 async function fetchData() {
 	try {
 		const response = await axios.request(options);
-		return response.data;
+		const data = response.data;
+		if (data && data.submissions) {
+			data.submissions.forEach(sub => {
+				if (sub.stdout) sub.stdout = decodeBase64(sub.stdout);
+				if (sub.stderr) sub.stderr = decodeBase64(sub.stderr);
+				if (sub.compile_output) sub.compile_output = decodeBase64(sub.compile_output);
+				if (sub.message) sub.message = decodeBase64(sub.message);
+				if (sub.stdin) sub.stdin = decodeBase64(sub.stdin);
+				if (sub.expected_output) sub.expected_output = decodeBase64(sub.expected_output);
+			});
+		}
+		return data;
 	} catch (error) {
 		console.error(error);
+		throw error;
 	}
 }
 
 
  while(true){
 
- const result =  await fetchData();
+  const result =  await fetchData();
 
   const IsResultObtained =  result.submissions.every((r)=>r.status_id>2);
 
@@ -105,5 +122,4 @@ module.exports = {getLanguageById,submitBatch,submitToken};
 
 
 // 
-
 

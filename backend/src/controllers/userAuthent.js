@@ -152,5 +152,23 @@ const deleteProfile = async(req,res)=>{
     }
 }
 
+const getLeaderboard = async (req, res) => {
+    try {
+        const users = await User.find({}, 'firstName lastName emailId problemSolved')
+            .populate('problemSolved', '_id');
+        
+        const leaderboard = users.map(u => ({
+            _id: u._id,
+            firstName: u.firstName,
+            lastName: u.lastName || '',
+            emailId: u.emailId,
+            solvedCount: u.problemSolved ? u.problemSolved.length : 0
+        })).sort((a, b) => b.solvedCount - a.solvedCount);
 
-module.exports = {register, login,logout,adminRegister,deleteProfile};
+        res.status(200).json(leaderboard);
+    } catch(err) {
+        res.status(500).send("Error: " + err.message);
+    }
+}
+
+module.exports = {register, login, logout, adminRegister, deleteProfile, getLeaderboard};

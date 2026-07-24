@@ -1,104 +1,68 @@
-import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Home, RefreshCw, Zap,Video } from 'lucide-react';
+import { Plus, Trash2, Video, ArrowLeft } from 'lucide-react';
 import { NavLink } from 'react-router';
 
 function Admin() {
-  const [selectedOption, setSelectedOption] = useState(null);
-
   const adminOptions = [
     {
       id: 'create',
       title: 'Create Problem',
-      description: 'Add a new coding problem to the platform',
+      description: 'Add a new coding problem with test cases, templates, and reference solutions.',
       icon: Plus,
-      color: 'btn-success',
-      bgColor: 'bg-success/10',
-      route: '/admin/create'
-    },
-    {
-      id: 'update',
-      title: 'Update Problem',
-      description: 'Edit existing problems and their details',
-      icon: Edit,
-      color: 'btn-warning',
-      bgColor: 'bg-warning/10',
-      route: '/admin/update'
+      route: '/admin/create',
+      tone: 'text-[#00b85a] bg-[#14332f]',
     },
     {
       id: 'delete',
       title: 'Delete Problem',
-      description: 'Remove problems from the platform',
+      description: 'Remove stale or incorrect problems from the platform database.',
       icon: Trash2,
-      color: 'btn-error',
-      bgColor: 'bg-error/10',
-      route: '/admin/delete'
+      route: '/admin/delete',
+      tone: 'text-[#ff6b6b] bg-[#3a1d24]',
     },
     {
       id: 'video',
-      title: 'Video Problem',
-      description: 'Upload And Delete Videos',
+      title: 'Video Solutions',
+      description: 'Upload and manage Cloudinary video editorials for problem walkthroughs.',
       icon: Video,
-      color: 'btn-success',
-      bgColor: 'bg-success/10',
-      route: '/admin/video'
-    }
+      route: '/admin/video',
+      tone: 'text-[#ffa116] bg-[#3d2a12]',
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-base-200">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-base-content mb-4">
-            Admin Panel
-          </h1>
-          <p className="text-base-content/70 text-lg">
-            Manage coding problems on your platform
-          </p>
+    <div className="min-h-screen bg-[#0f0f0f] p-6 text-white">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-8 flex items-center justify-between border-b border-[#303030] pb-5">
+          <div className="flex items-center gap-3">
+            <NavLink to="/" className="rounded-md bg-[#303030] p-2 text-[#b8b8b8] transition hover:bg-[#3a3a3a] hover:text-white">
+              <ArrowLeft size={18} />
+            </NavLink>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Admin <span className="text-[#ffa116]">Panel</span></h1>
+              <p className="mt-1 text-sm text-[#a3a3a3]">Manage problem sets, video editorials, and database content.</p>
+            </div>
+          </div>
         </div>
 
-        {/* Admin Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {adminOptions.map((option) => {
             const IconComponent = option.icon;
             return (
-              <div
-                key={option.id}
-                className="card bg-base-100 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer"
-              >
-                <div className="card-body items-center text-center p-8">
-                  {/* Icon */}
-                  <div className={`${option.bgColor} p-4 rounded-full mb-4`}>
-                    <IconComponent size={32} className="text-base-content" />
+              <div key={option.id} className="lc-card flex min-h-64 flex-col justify-between p-6 transition hover:border-[#4a4a4a]">
+                <div>
+                  <div className={`mb-5 flex h-12 w-12 items-center justify-center rounded-lg ${option.tone}`}>
+                    <IconComponent size={24} />
                   </div>
-                  
-                  {/* Title */}
-                  <h2 className="card-title text-xl mb-2">
-                    {option.title}
-                  </h2>
-                  
-                  {/* Description */}
-                  <p className="text-base-content/70 mb-6">
-                    {option.description}
-                  </p>
-                  
-                  {/* Action Button */}
-                  <div className="card-actions">
-                    <div className="card-actions">
-                    <NavLink 
-                    to={option.route}
-                   className={`btn ${option.color} btn-wide`}
-                   >
-                   {option.title}
-                   </NavLink>
-                   </div>
-                  </div>
+                  <h2 className="mb-2 text-lg font-bold text-white">{option.title}</h2>
+                  <p className="text-sm leading-6 text-[#a3a3a3]">{option.description}</p>
                 </div>
+                <NavLink to={option.route} className="lc-btn lc-btn-muted mt-7 w-full">
+                  Open Control
+                </NavLink>
               </div>
             );
           })}
         </div>
-
       </div>
     </div>
   );

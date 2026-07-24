@@ -11,6 +11,9 @@ import Admin from "./pages/Admin";
 import AdminVideo from "./components/AdminVideo"
 import AdminDelete from "./components/AdminDelete"
 import AdminUpload from "./components/AdminUpload"
+import Leaderboard from "./pages/Leaderboard";
+import Profile from "./pages/Profile";
+import LoadingScreen from "./components/LoadingScreen";
 
 function App(){
   
@@ -23,9 +26,7 @@ function App(){
   }, [dispatch]);
   
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <span className="loading loading-spinner loading-lg"></span>
-    </div>;
+    return <LoadingScreen variant="fullscreen" message="Initializing..." />;
   }
 
   return(
@@ -39,8 +40,9 @@ function App(){
       <Route path="/admin/delete" element={isAuthenticated && user?.role === 'admin' ? <AdminDelete /> : <Navigate to="/" />} />
       <Route path="/admin/video" element={isAuthenticated && user?.role === 'admin' ? <AdminVideo /> : <Navigate to="/" />} />
       <Route path="/admin/upload/:problemId" element={isAuthenticated && user?.role === 'admin' ? <AdminUpload /> : <Navigate to="/" />} />
-      <Route path="/problem/:problemId" element={<ProblemPage/>}></Route>
-      
+      <Route path="/problem/:problemId" element={isAuthenticated ? <ProblemPage/> : <Navigate to="/signup" />}></Route>
+      <Route path="/leaderboard" element={isAuthenticated ? <Leaderboard /> : <Navigate to="/signup" />} />
+      <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/signup" />} />
     </Routes>
   </>
   )
