@@ -27,7 +27,20 @@ const submitCode = async (req,res)=>{
        if(!problem)
          return res.status(404).send("Problem not found");
     //    testcases(Hidden)
-    
+
+
+    const template = problem.templates.find(
+    t => t.language === language
+);
+
+if (!template) {
+    return res.status(400).send("Language template not found");
+}
+
+const finalCode = template.driverCode.replace(
+    "{{USER_CODE}}",
+    code
+);
     //   Kya apne submission store kar du pehle....
     const submittedResult = await Submission.create({
           userId,
@@ -43,11 +56,11 @@ const submitCode = async (req,res)=>{
     const languageId = getLanguageById(language);
    
     const submissions = problem.hiddenTestCases.map((testcase)=>({
-        source_code:code,
-        language_id: languageId,
-        stdin: testcase.input,
-        expected_output: testcase.output
-    }));
+    source_code: finalCode,
+    language_id: languageId,
+    stdin: testcase.input,
+    expected_output: testcase.output
+}));
 
     
     const submitResult = await submitBatch(submissions);
@@ -133,6 +146,20 @@ const runCode = async(req,res)=>{
       const problem =  await Problem.findById(problemId);
       if(!problem)
         return res.status(404).send("Problem not found");
+
+
+
+      const template = problem.templates.find(
+    t => t.language === language
+);
+const finalCode = template.driverCode.replace(
+    "{{USER_CODE}}",
+    code
+);
+
+if (!template) {
+    return res.status(400).send("Language template not found");
+}
    //    testcases(Hidden)
       if(language==='cpp')
         language='c++'
@@ -142,7 +169,7 @@ const runCode = async(req,res)=>{
    const languageId = getLanguageById(language);
 
    const submissions = problem.visibleTestCases.map((testcase)=>({
-       source_code:code,
+       source_code:finalCode,
        language_id: languageId,
        stdin: testcase.input,
        expected_output: testcase.output

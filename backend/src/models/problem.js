@@ -50,18 +50,26 @@ const problemSchema = new Schema({
         }
     ],
 
-    startCode: [
-        {
-            language:{
-                type:String,
-                required:true,
-            },
-            initialCode:{
-                type:String,
-                required:true
-            }
-        }
-    ],
+    templates: [
+  {
+    language: {
+      type: String,
+      required: true,
+    },
+    starterCode: {
+      type: String,
+      required: true,
+    },
+    driverCode: {
+      type: String,
+      required: true,
+    },
+    explanation: {
+    type: String,
+    default: ""
+}
+  }
+],
 
     referenceSolution:[
         {
