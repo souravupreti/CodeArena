@@ -7,13 +7,22 @@ const SolutionVideo = require("../models/solutionVideo")
 const createProblem = async (req,res)=>{
    
   // API request to authenticate user:
-    const {title,description,difficulty,tags,
-        visibleTestCases,hiddenTestCases,startCode,
-        referenceSolution, problemCreator
-    } = req.body;
+    const {
+    title,
+    description,
+    difficulty,
+    tags,
+    visibleTestCases,
+    hiddenTestCases,
+    referenceSolution,
+    templates
+} = req.body;
 
 
     try{
+      if (!templates || !referenceSolution || !visibleTestCases) {
+    return res.status(400).send("Missing required fields");
+}
        
       for(const {language,completeCode} of referenceSolution){
          
@@ -23,11 +32,21 @@ const createProblem = async (req,res)=>{
         // stdin: 
         // expectedOutput:
 
+        const template = templates.find(
+        t => t.language === language);
+
+        if (!template) {
+        return res.status(400).send("Template not found");
+        }
+         const finalCode = template.driverCode.replace(
+        "{{USER_CODE}}",
+        completeCode
+    );
         const languageId = getLanguageById(language);
           
         // I am creating Batch submission
         const submissions = visibleTestCases.map((testcase)=>({
-            source_code:completeCode,
+            source_code:finalCode,
             language_id: languageId,
             stdin: testcase.input,
             expected_output: testcase.output
@@ -65,16 +84,24 @@ const createProblem = async (req,res)=>{
       res.status(201).send("Problem Saved Successfully");
     }
     catch(err){
-        res.status(400).send("Error: "+err);
+        return res.status(400).json({
+    success: false,
+    message: `Reference solution failed. Error: ${err.message}`
+});
     }
 }
 
 const updateProblem = async (req,res)=>{
     
   const {id} = req.params;
-  const {title,description,difficulty,tags,
-    visibleTestCases,hiddenTestCases,startCode,
-    referenceSolution, problemCreator
+  const {title,
+  description,
+  difficulty,
+  tags,
+  visibleTestCases,
+  hiddenTestCases,
+  templates,
+  referenceSolution
    } = req.body;
 
   try{
@@ -88,6 +115,7 @@ const updateProblem = async (req,res)=>{
     {
       return res.status(404).send("ID is not persent in server");
     }
+    
       
     for(const {language,completeCode} of referenceSolution){
          
@@ -96,12 +124,22 @@ const updateProblem = async (req,res)=>{
       // language_id:
       // stdin: 
       // expectedOutput:
+      const template = templates.find(t => t.language === language);
+
+if (!template) {
+    return res.status(400).send("Template not found");
+}
+
+const finalCode = template.driverCode.replace(
+    "{{USER_CODE}}",
+    completeCode
+);
 
       const languageId = getLanguageById(language);
         
       // I am creating Batch submission
       const submissions = visibleTestCases.map((testcase)=>({
-          source_code:completeCode,
+          source_code:finalCode,
           language_id: languageId,
           stdin: testcase.input,
           expected_output: testcase.output
@@ -133,7 +171,10 @@ const updateProblem = async (req,res)=>{
   res.status(200).send(newProblem);
   }
   catch(err){
-      res.status(500).send("Error: "+err);
+      return res.status(400).json({
+    success: false,
+    message: `Reference solution failed for ${language}`
+});
   }
 }
 
@@ -160,42 +201,46 @@ const deleteProblem = async(req,res)=>{
 }
 
 
-const getProblemById = async(req,res)=>{
+const getProblemById = async (req, res) => {
+    const { id } = req.params;
 
-  const {id} = req.params;
-  try{
-     
-    if(!id)
-      return res.status(400).send("ID is Missing");
+    try {
+        if (!id)
+            return res.status(400).send("ID is Missing");
 
-    const getProblem = await Problem.findById(id).select('_id title description difficulty tags visibleTestCases startCode referenceSolution ');
-   
-    // video ka jo bhi url wagera le aao
+        const problem = await Problem.findById(id).lean();
 
-   if(!getProblem)
-    return res.status(404).send("Problem is Missing");
+        if (!problem)
+            return res.status(404).send("Problem is Missing");
 
-   const videos = await SolutionVideo.findOne({problemId:id});
+        const responseData = {
+            _id: problem._id,
+            title: problem.title,
+            description: problem.description,
+            difficulty: problem.difficulty,
+            tags: problem.tags,
+            visibleTestCases: problem.visibleTestCases,
+            templates: problem.templates.map(template => ({
+                language: template.language,
+                starterCode: template.starterCode
+            }))
+        };
 
-   if(videos){   
-    
-   const responseData = {
-    ...getProblem.toObject(),
-    secureUrl:videos.secureUrl,
-    thumbnailUrl : videos.thumbnailUrl,
-    duration : videos.duration,
-   } 
-  
-   return res.status(200).send(responseData);
-   }
-    
-   res.status(200).send(getProblem);
+        const videos = await SolutionVideo.findOne({ problemId: id });
 
-  }
-  catch(err){
-    res.status(500).send("Error: "+err);
-  }
-}
+        if (videos) {
+            responseData.secureUrl = videos.secureUrl;
+            responseData.thumbnailUrl = videos.thumbnailUrl;
+            responseData.duration = videos.duration;
+        }
+
+        return res.status(200).json(responseData);
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("Internal Server Error");
+    }
+};
 
 const getAllProblem = async(req,res)=>{
 
@@ -247,7 +292,6 @@ const submittedProblem = async(req,res)=>{
     return res.status(200).send([]);
 
   return res.status(200).send(ans);
-
   }
   catch(err){
      res.status(500).send("Internal Server Error");
