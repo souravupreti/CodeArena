@@ -108,8 +108,12 @@ function AdminPanel() {
       alert('Problem created successfully!');
       navigate('/');
     } catch (error) {
-      alert(`Error: ${error.response?.data?.message || error.message}`);
-    } finally {
+  console.log("Request Data:", data);
+  console.log("Response:", error.response?.data);
+  console.log("Status:", error.response?.status);
+
+  alert(error.response?.data?.message || error.message);
+} finally {
       setSubmitting(false);
     }
   };
