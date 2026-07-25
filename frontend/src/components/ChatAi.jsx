@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import axiosClient from '../utils/axiosClient';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import { Send, Bot, User, Loader2 } from "lucide-react";
 function ChatAi({
@@ -25,10 +29,13 @@ function ChatAi({
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  messagesEndRef.current?.scrollIntoView({
+    behavior: "smooth",
+  });
+}, [messages, loading]);
 
   const onSubmit = async (data) => {
+      if (loading) return;
   const newUserMessage = {
     role: "user",
     parts: [{ text: data.message }],
@@ -100,9 +107,45 @@ templates: problem?.templates || [],
             <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${msg.role === 'user' ? 'bg-[#0a84ff] text-white' : 'bg-[#3d2a12] text-[#ffa116]'}`}>
               {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
             </div>
-            <div className={`max-w-[82%] rounded-lg p-3 leading-relaxed ${msg.role === 'user' ? 'rounded-tr-none bg-[#0a84ff] text-white' : 'rounded-tl-none border border-[#303030] bg-[#242424] text-[#e5e5e5]'}`}>
-              {msg.parts[0].text}
-            </div>
+            <div
+  className={`max-w-[82%] rounded-lg p-3 leading-relaxed ${
+    msg.role === "user"
+      ? "rounded-tr-none bg-[#0a84ff] text-white"
+      : "rounded-tl-none border border-[#303030] bg-[#242424] text-[#e5e5e5]"
+  }`}
+>
+  {msg.role === "user" ? (
+    <p className="whitespace-pre-wrap break-words">
+      {msg.parts[0].text}
+    </p>
+  ) : (
+    <ReactMarkdown
+  remarkPlugins={[remarkGfm]}
+  components={{
+    code({ inline, className, children, ...props }) {
+      const match = /language-(\w+)/.exec(className || "");
+
+      return !inline && match ? (
+        <SyntaxHighlighter
+          style={oneDark}
+          language={match[1]}
+          PreTag="div"
+          {...props}
+        >
+          {String(children).replace(/\n$/, "")}
+        </SyntaxHighlighter>
+      ) : (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
+  }}
+>
+  {msg.parts[0].text}
+</ReactMarkdown>
+  )}
+</div>
           </div>
         ))}
         <div ref={messagesEndRef} />
