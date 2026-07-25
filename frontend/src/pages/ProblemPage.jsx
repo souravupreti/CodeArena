@@ -57,7 +57,7 @@ const ProblemPage = () => {
         title: problem.title,
         description: problem.description,
         testCases: JSON.stringify(problem.visibleTestCases),
-        startCode: JSON.stringify(problem.startCode),
+        templates: JSON.stringify(problem.templates)
       });
       setHintText(response.data.message);
     } catch (error) {
@@ -85,13 +85,16 @@ const ProblemPage = () => {
           axiosClient.get('/problem/problemSolvedByUser').catch(() => ({ data: [] })),
         ]);
         const problemData = problemResponse.data;
-        const initialCodeObj = problemData.startCode?.find(
-          (sc) => normalizeLanguage(sc.language) === selectedLanguage
-        );
+       const initialCodeObj = problemData.templates?.find(
+  (t) => normalizeLanguage(t.language) === selectedLanguage
+);
+
+if (initialCodeObj) {
+  setCode(initialCodeObj.starterCode);
+}
 
         setProblem(problemData);
         setIsSolved((solvedResponse.data || []).some((item) => item._id === problemId));
-        if (initialCodeObj) setCode(initialCodeObj.initialCode);
       } catch (error) {
         console.error('Error fetching problem:', error);
       } finally {
@@ -102,14 +105,17 @@ const ProblemPage = () => {
     fetchProblem();
   }, [problemId]);
 
-  useEffect(() => {
-    if (problem && problem.startCode) {
-      const initialCodeObj = problem.startCode.find(
-        (sc) => normalizeLanguage(sc.language) === selectedLanguage
-      );
-      if (initialCodeObj) setCode(initialCodeObj.initialCode);
-    }
-  }, [selectedLanguage, problem]);
+useEffect(() => {
+  if (!problem) return;
+
+  const initialCodeObj = problem.templates?.find(
+    (t) => normalizeLanguage(t.language) === selectedLanguage
+  );
+
+  if (initialCodeObj) {
+    setCode(initialCodeObj.starterCode);
+  }
+}, [selectedLanguage, problem]);
 
   const handleEditorChange = (value) => setCode(value || '');
   const handleEditorDidMount = (editor) => {
@@ -325,18 +331,15 @@ const ProblemPage = () => {
               <div>
                 <h2 className="mb-4 text-lg font-bold text-white">Reference Solutions</h2>
                 <div className="space-y-6">
-                  {problem.referenceSolution?.map((solution, index) => (
-                    <div key={index} className="overflow-hidden rounded-lg border border-[#303030]">
-                      <div className="border-b border-[#3a3a3a] bg-[#303030] px-4 py-2.5 font-mono text-xs font-bold text-[#d4d4d4]">
-                        {problem?.title} - {solution?.language}
-                      </div>
-                      <div className="bg-[#1a1a1a] p-4">
-                        <pre className="overflow-x-auto rounded-lg border border-[#303030] bg-[#0f0f0f] p-3 font-mono text-xs text-[#f5f5f5]">
-                          <code>{solution?.completeCode}</code>
-                        </pre>
-                      </div>
-                    </div>
-                  )) || <p className="font-mono text-xs text-[#a3a3a3]">Solutions available upon submission.</p>}
+                  <div className="rounded-lg border border-dashed border-[#3a3a3a] bg-[#1a1a1a] p-8 text-center">
+  <h3 className="text-lg font-semibold text-white">
+    Solutions are locked
+  </h3>
+
+  <p className="mt-2 text-sm text-[#8a8a8a]">
+    Submit an accepted solution to unlock the official solution.
+  </p>
+</div>
                 </div>
               </div>
             )}
