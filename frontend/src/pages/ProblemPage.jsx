@@ -39,35 +39,40 @@ const ProblemPage = () => {
   const { problemId } = useParams();
   const { handleSubmit } = useForm();
 
-  const handleGetHint = async () => {
-    if (!problem) return;
-    setFetchingHint(true);
-    setHintText('');
-    try {
-      const response = await axiosClient.post('/ai/chat', {
-        messages: [
-          {
-            role: 'user',
-            parts: [
-              {
-                text: `Provide a subtle, step-by-step hint for solving the problem "${problem.title}". DO NOT provide the complete solution or code. Give algorithmic intuition and guide me on how to think about the optimal approach.`,
-              },
-            ],
-          },
-        ],
-        title: problem.title,
-        description: problem.description,
-        testCases: JSON.stringify(problem.visibleTestCases),
-        templates: JSON.stringify(problem.templates)
-      });
-      setHintText(response.data.message);
-    } catch (error) {
-      console.error('Hint Error:', error);
-      setHintText('Failed to retrieve hint. Please verify your connection or try again.');
-    } finally {
-      setFetchingHint(false);
-    }
-  };
+ const handleGetHint = async () => {
+  if (!problem) return;
+
+  setFetchingHint(true);
+  setHintText("");
+
+  try {
+    const response = await axiosClient.post("/ai/chat", {
+      mode: "hint",
+
+      title: problem.title,
+      description: problem.description,
+      testCases: problem.visibleTestCases,
+      templates: problem.templates,
+
+      userCode: code,
+      language: selectedLanguage,
+
+      messages: [
+        {
+          role: "user",
+          content: "Give me one hint."
+        }
+      ]
+    });
+
+    setHintText(response.data.message);
+  } catch (error) {
+    console.error(error);
+    setHintText("Unable to generate hint.");
+  } finally {
+    setFetchingHint(false);
+  }
+};
 
   const normalizeLanguage = (language) => {
     const value = language?.toLowerCase();
