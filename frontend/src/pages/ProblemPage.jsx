@@ -202,7 +202,7 @@ useEffect(() => {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0f0f0f] text-[#f5f5f5]">
-      <header className="flex h-[50px] shrink-0 items-center justify-between border-b border-[#303030] bg-[#111111] px-3">
+      <header >
         {/* <div className="flex items-center gap-2">
           <NavLink to="/" className="rounded-md p-2 text-[#b8b8b8] hover:bg-[#2b2b2b] hover:text-white">
             <ArrowLeft size={18} />
