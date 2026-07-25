@@ -25,11 +25,12 @@ const problemSchema = z.object({
     })
   ).min(1, 'At least one hidden test case required'),
   startCode: z.array(
-    z.object({
-      language: z.enum(['C++', 'Java', 'JavaScript']),
-      initialCode: z.string().min(1, 'Initial code is required')
-    })
-  ).length(3, 'All three languages required'),
+  z.object({
+    language: z.enum(['C++', 'Java', 'JavaScript']),
+    initialCode: z.string().min(1, 'Initial code is required'),
+    driverCode: z.string().min(1, 'Driver code is required')
+  })
+).length(3, 'All three languages required'),
   referenceSolution: z.array(
     z.object({
       language: z.enum(['C++', 'Java', 'JavaScript']),
@@ -58,10 +59,22 @@ function AdminPanel() {
         { input: '', output: '' }
       ],
       startCode: [
-        { language: 'C++', initialCode: '' },
-        { language: 'Java', initialCode: '' },
-        { language: 'JavaScript', initialCode: '' }
-      ],
+  {
+    language: 'C++',
+    initialCode: '',
+    driverCode: ''
+  },
+  {
+    language: 'Java',
+    initialCode: '',
+    driverCode: ''
+  },
+  {
+    language: 'JavaScript',
+    initialCode: '',
+    driverCode: ''
+  }
+],
       referenceSolution: [
         { language: 'C++', completeCode: '' },
         { language: 'Java', completeCode: '' },
@@ -442,6 +455,36 @@ function AdminPanel() {
                       <span className="text-[#ff375f] text-xs font-mono mt-1 block">{errors.referenceSolution[index].completeCode.message}</span>
                     )}
                   </div>
+                  <div>
+  <div className="flex justify-between items-center mb-2">
+    <label className="text-xs font-semibold uppercase tracking-wider text-[#a3a3a3] font-mono">
+      Driver Code ({langName})
+    </label>
+
+    <span className="text-[10px] text-[#8a8a8a] font-mono">
+      Used to execute the user's solution
+    </span>
+  </div>
+
+  <div className="relative">
+    <textarea
+      {...register(`startCode.${index}.driverCode`)}
+      rows={10}
+      placeholder="// Driver Code..."
+      className="w-full bg-[#121212] border border-[#2d2d2d] focus:border-[#ffa116] text-[#e0e0e0] font-mono p-4 rounded-lg text-xs outline-none leading-relaxed"
+    />
+    <Terminal
+      size={14}
+      className="absolute right-4 bottom-4 text-[#4a4a4a]"
+    />
+  </div>
+
+  {errors.startCode?.[index]?.driverCode && (
+    <span className="text-[#ff375f] text-xs font-mono mt-1 block">
+      {errors.startCode[index].driverCode.message}
+    </span>
+  )}
+</div>
                 </div>
               );
             })}
