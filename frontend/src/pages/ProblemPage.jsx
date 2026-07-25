@@ -21,6 +21,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import TopNav from '../components/TopNav';
 
 const ProblemPage = () => {
   const [problem, setProblem] = useState(null);
@@ -202,7 +203,7 @@ useEffect(() => {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#0f0f0f] text-[#f5f5f5]">
       <header className="flex h-[50px] shrink-0 items-center justify-between border-b border-[#303030] bg-[#111111] px-3">
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <NavLink to="/" className="rounded-md p-2 text-[#b8b8b8] hover:bg-[#2b2b2b] hover:text-white">
             <ArrowLeft size={18} />
           </NavLink>
@@ -222,7 +223,8 @@ useEffect(() => {
             <Send size={16} />
             {loading ? 'Submitting' : 'Submit'}
           </button>
-        </div>
+        </div> */}
+        <TopNav />
       </header>
 
       <div className="flex min-h-0 flex-1 gap-2 p-2">
