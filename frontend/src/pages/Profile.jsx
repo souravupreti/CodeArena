@@ -190,17 +190,28 @@ function Profile() {
                     <tbody>
                       {recentSubmissions.slice(0, 12).map((sub) => (
                         <tr key={sub._id} className="border-t border-[#303030] hover:bg-[#2a2a2a]">
-                          <td className="px-5 py-4 font-semibold text-white">
-                            {sub.problemId ? (
-                              <NavLink to={`/problem/${sub.problemId._id}`} className="hover:text-[#ffa116]">{sub.problemId.title}</NavLink>
-                            ) : (
-                              <span className="text-[#747474]">Deleted problem</span>
-                            )}
-                          </td>
+                          <td className="px-5 py-4 font-semibold text-white whitespace-nowrap">
+  {sub.problemId && (
+    <NavLink
+      to={`/problem/${sub.problemId._id}`}
+      className="hover:text-[#ffa116]"
+    >
+      {sub.problemId.title}
+    </NavLink>
+  )}
+</td>
                           <td className="px-5 py-4 uppercase text-[#b8b8b8]">{sub.language}</td>
-                          <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusColor(sub.status)}`}>{getVerdictLabel(sub.status)}</span></td>
-                          <td className="px-5 py-4 text-center">{sub.runtime}s</td>
-                          <td className="px-5 py-4 text-center">{formatMemory(sub.memory)}</td>
+                          <td className="px-5 py-4"><span
+  className={`inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${getStatusColor(sub.status)}`}
+>
+  {getVerdictLabel(sub.status)}
+</span></td>
+                          <td className="px-5 py-4 text-center">
+  {Number(sub.runtime).toFixed(3)}s
+</td>
+                          <td className="px-5 py-4 text-center">
+    {Number(sub.memory).toFixed(2)} MB
+</td>
                           <td className="px-5 py-4 text-xs text-[#8a8a8a]">{new Date(sub.createdAt).toLocaleString()}</td>
                         </tr>
                       ))}

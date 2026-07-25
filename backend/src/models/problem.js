@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Submission = require("./submission");
 const {Schema} = mongoose;
 
 const problemSchema = new Schema({
@@ -92,6 +93,28 @@ const problemSchema = new Schema({
 })
 
 
+problemSchema.pre("findOneAndDelete", async function (next) {
+  try {
+    console.log("Problem delete middleware");
+
+    const problem = await this.model.findOne(this.getFilter());
+
+    console.log("Problem:", problem?._id);
+
+    if (problem) {
+      const result = await Submission.deleteMany({
+        problemId: problem._id,
+      });
+
+      console.log("Deleted submissions:", result.deletedCount);
+    }
+
+    next();
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+});
 const Problem = mongoose.model('problem',problemSchema);
 
 module.exports = Problem;
