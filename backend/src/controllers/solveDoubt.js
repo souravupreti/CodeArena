@@ -1,25 +1,27 @@
-const { GoogleGenAI } = require("@google/genai");
+const Groq = require("groq-sdk");
+
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY,
+});
 
 const solveDoubt = async (req, res) => {
     try {
-        const { messages, title, description, testCases, startCode } = req.body;
-        
-        if (!process.env.GEMINI_KEY) {
-            return res.status(500).json({ message: "Gemini API key is missing" });
-        }
+        const {
+            messages,
+            title,
+            description,
+            testCases,
+            templates
+        } = req.body;
 
-        const genAI = new GoogleGenAI(process.env.GEMINI_KEY);
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
-            systemInstruction: `
+        const systemPrompt = `
 You are an expert Data Structures and Algorithms (DSA) tutor specializing in helping users solve coding problems. Your role is strictly limited to DSA-related assistance only.
 
 ## CURRENT PROBLEM CONTEXT:
 [PROBLEM_TITLE]: ${title}
 [PROBLEM_DESCRIPTION]: ${description}
 [EXAMPLES]: ${testCases}
-[startCode]: ${startCode}
-
+[TEMPLATES]: ${templates}
 
 ## YOUR CAPABILITIES:
 1. **Hint Provider**: Give step-by-step hints without revealing the complete solution
@@ -62,13 +64,14 @@ You are an expert Data Structures and Algorithms (DSA) tutor specializing in hel
 - Use examples to illustrate concepts
 - Break complex explanations into digestible parts
 - Always relate back to the current problem context
-- Always response in the Language in which user is comfortable or given the context
+- Always respond in the language the user is comfortable with or the language used in the conversation.
 
 ## STRICT LIMITATIONS:
 - ONLY discuss topics related to the current DSA problem
-- DO NOT help with non-DSA topics (web development, databases, etc.)
+- DO NOT help with non-DSA topics (web development, databases, DevOps, networking, etc.)
 - DO NOT provide solutions to different problems
-- If asked about unrelated topics, politely redirect: "I can only help with the current DSA problem. What specific aspect of this problem would you like assistance with?"
+- If asked about unrelated topics, politely reply:
+"I can only help with the current DSA problem. What specific aspect of this problem would you like assistance with?"
 
 ## TEACHING PHILOSOPHY:
 - Encourage understanding over memorization
@@ -78,37 +81,34 @@ You are an expert Data Structures and Algorithms (DSA) tutor specializing in hel
 - Promote best coding practices
 
 Remember: Your goal is to help users learn and understand DSA concepts through the lens of the current problem, not just to provide quick answers.
-`
+`;
+
+        const completion = await groq.chat.completions.create({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+                {
+                    role: "system",
+                    content: systemPrompt,
+                },
+                ...messages.map((msg) => ({
+                    role: msg.role === "assistant" ? "assistant" : "user",
+                    content: msg.content || msg.parts?.[0]?.text || "",
+                })),
+            ],
+            temperature: 0.3,
         });
-
-        // Ensure messages are in the correct format for Gemini
-        // Gemini expects { role: 'user' | 'model', parts: [{ text: '...' }] }
-        const chatHistory = messages.map(msg => ({
-            role: msg.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: msg.content || msg.parts[0].text }]
-        }));
-
-        // Get the last message as the prompt
-        const lastMessage = chatHistory.pop();
-        
-        const chat = model.startChat({
-            history: chatHistory,
-        });
-
-        const result = await chat.sendMessage(lastMessage.parts[0].text);
-        const response = await result.response;
-        const text = response.text();
 
         res.status(200).json({
-            message: text
+            message: completion.choices[0].message.content,
         });
 
     } catch (err) {
-        console.error("Gemini Error:", err);
+        console.error("Groq Error:", err);
+
         res.status(500).json({
-            message: "Internal server error"
+            message: "Internal server error",
         });
     }
-}
+};
 
 module.exports = solveDoubt;
