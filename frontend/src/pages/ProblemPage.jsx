@@ -361,7 +361,11 @@ useEffect(() => {
             {problem && activeLeftTab === 'chatAI' && (
               <div>
                 <h2 className="mb-4 text-lg font-bold text-white">Interactive AI Tutor</h2>
-                <ChatAi problem={problem} />
+                <ChatAi
+  problem={problem}
+  code={code}
+  language={selectedLanguage}
+/>
               </div>
             )}
           </div>

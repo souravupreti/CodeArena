@@ -3,7 +3,11 @@ import { useForm } from 'react-hook-form';
 import axiosClient from '../utils/axiosClient';
 import { Send, Bot, User } from 'lucide-react';
 
-function ChatAi({ problem }) {
+function ChatAi({
+    problem,
+    code,
+    language
+})  {
   const [messages, setMessages] = useState([
     { role: 'model', parts: [{ text: `Hi! I'm your Gemini AI Coach. Ask me anything about "${problem?.title || 'this problem'}".` }] },
   ]);
@@ -21,14 +25,25 @@ function ChatAi({ problem }) {
     reset();
 
     try {
-      const response = await axiosClient.post('/ai/chat', {
-        messages: updatedMessages,
-        title: problem.title,
-        description: problem.description,
-        testCases: problem.visibleTestCases,
-        startCode: problem.startCode,
-      });
+      const response = await axiosClient.post("/ai/chat", {
 
+    mode: "chat",
+
+    messages: updatedMessages,
+
+    title: problem.title,
+
+    description: problem.description,
+
+    testCases: problem.visibleTestCases,
+
+    templates: problem.templates,
+
+    userCode: code,
+
+    language
+
+});
       setMessages((prev) => [...prev, { role: 'model', parts: [{ text: response.data.message }] }]);
     } catch (error) {
       console.error('API Error:', error);
