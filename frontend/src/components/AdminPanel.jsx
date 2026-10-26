@@ -104,7 +104,10 @@ function AdminPanel() {
   const onSubmit = async (data) => {
     try {
       setSubmitting(true);
-      await axiosClient.post('/problem/create', data);
+      await axiosClient.post('/problem/create', {
+  ...data,
+  templates: data.startCode,
+});
       alert('Problem created successfully!');
       navigate('/');
     } catch (error) {
