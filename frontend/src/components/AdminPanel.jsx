@@ -103,23 +103,26 @@ function AdminPanel() {
 
   const onSubmit = async (data) => {
     try {
-      setSubmitting(true);
-      await axiosClient.post('/problem/create', {
-  ...data,
-  templates: data.startCode,
-});
-      alert('Problem created successfully!');
-      navigate('/');
-    } catch (error) {
-  console.log("Request Data:", data);
-  console.log("Response:", error.response?.data);
-  console.log("Status:", error.response?.status);
+        setSubmitting(true);
 
-  alert(error.response?.data?.message || error.message);
-} finally {
-      setSubmitting(false);
+        const payload = {
+            ...data,
+            templates: data.startCode
+        };
+
+        await axiosClient.post('/problem/create', payload);
+
+        alert('Problem created successfully!');
+        navigate('/');
+    } catch (error) {
+        console.log('Request Data:', data);
+        console.log('Response:', error.response?.data);
+        console.log('Status:', error.response?.status);
+        alert(error.response?.data?.message || error.response?.data || error.message);
+    } finally {
+        setSubmitting(false);
     }
-  };
+};
 
   return (
     <div className="lc-page min-h-screen bg-[#0f0f0f] py-8 px-4 sm:px-6 lg:px-8">
